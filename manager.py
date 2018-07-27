@@ -1,13 +1,19 @@
+import hou
+
+
 class PresetManager(object):
-    def __init__(self):
-        pass
+    def __init__(self, _node):
+        self.preset_node = _node
 
-    def publish(self, node_type):
+    def isValid(self):
         """
-        Given a specified Houdini node type list all the available presets which can be published
+        Check if the preset manager has a valid node as an input
 
-        :param node_type:   The Houdini node type we are publishing presets for
-        :type node_type:    hou.NodeType
+        :return:        Is valid?
+        :type:          bool
         """
-        print 'Publishing'
-        print node_type
+        if self.preset_node and issubclass(type(self.preset_node), hou.Node):
+            return True
+        else:
+            return False
+
