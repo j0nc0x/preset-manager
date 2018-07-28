@@ -194,8 +194,14 @@ class PresetManager(object):
             preset = self.local_presets[result[0]]
 
             if self.remote_exists(preset):
-                # Already exists - need to handle this
-                pass
+                # Already exists
+                msg = 'A preset with this name has already been published for this node type. Either select a new ' \
+                      'name or leave it unchanged to overwrite.'
+                result = hou.ui.readInput(msg, initial_contents=preset)
+                if result[1]:
+                    new_preset_name = result[1]
+                else:
+                    new_preset_name = preset
             else:
                 # Preset not renamed
                 new_preset_name = preset
@@ -212,7 +218,7 @@ class PresetManager(object):
 
             # Write into idx
             remote_dir = '{temp}/remote'.format(temp=self.temp)
-            
+
             prefs = os.getenv('PRESET_REPO')
             preset_dir = '{prefs}/{category}'.format(prefs=prefs,
                                                      category=self.get_node_type_category())
@@ -230,7 +236,6 @@ class PresetManager(object):
     def regenerate_section_list(self):
         """
         Re-generate the Section.list for the given node
-        :return:
         """
         # First remove the old Section.list if one exists
         section_list = '{temp}/remote/Sections.list'.format(temp=self.temp)
