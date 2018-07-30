@@ -11,7 +11,7 @@ man = presetmanager.PresetManager(n)`
 # start the publish
 man.publish_preset()
 ```
-This could be added as a right-click menu option in the network editior.
+This could be added as a right-click menu option in the network editior. The ```can_publish``` method can be used to determine whether the publish option should be available or not.
 
 ## Notes
 Currently the publish is a basic comparison / update of a shared directory of presets as a proof of concept. This probably needs further development to use a versioned publish directory, or perhaps source control to make it more robust, as using a single publish directory could result in overwrite issues when being used by several users concurrently.
