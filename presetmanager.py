@@ -265,5 +265,4 @@ class PresetManager(object):
 
             # And write the file
             cmd_list = ['hidx', '-c', remote_dir, preset_path]
-            print cmd_list
             subprocess.call(cmd_list)
