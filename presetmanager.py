@@ -16,9 +16,9 @@ class PresetManager(object):
 
         # First extract the presets so we can analyse them
         self._extract_all_presets()
-        self.analyse_presets()
+        self._analyse_presets()
 
-    def is_valid(self):
+    def _is_valid(self):
         """
         Check if the preset manager has a valid node as an input
 
@@ -30,7 +30,7 @@ class PresetManager(object):
         else:
             return False
 
-    def get_node_type(self, string=True):
+    def _get_node_type(self, string=True):
         """
         Find the node type for the given node
 
@@ -39,13 +39,13 @@ class PresetManager(object):
         :return:        The node type
         :type:          hou.NodeType
         """
-        if self.is_valid():
+        if self._is_valid():
             if string:
                 return self.preset_node.type().name()
             else:
                 return self.preset_node.type()
 
-    def get_node_type_category(self, string=True):
+    def _get_node_type_category(self, string=True):
         """
         Find the node type category for the given node
 
@@ -54,45 +54,45 @@ class PresetManager(object):
         :return:        The node type category
         :type:          hou.NodeTypeCategory
         """
-        if self.is_valid():
+        if self._is_valid():
             if string:
-                return self.get_node_type(string=False).category().name()
+                return self._get_node_type(string=False).category().name()
             else:
-                return self.get_node_type(string=False).category()
+                return self._get_node_type(string=False).category()
 
-    def local_preset_path(self):
+    def _local_preset_path(self):
         """
         The path on disk of the local preset for the given node if it exists
 
         :return:        The path on disk to the preset
         :type:          str
         """
-        if self.is_valid():
+        if self._is_valid():
             prefs = os.getenv('HOUDINI_USER_PREF_DIR')
             preset_path = '{prefs}/presets/{category}/{type}.idx'.format(prefs=prefs,
-                                                                         category=self.get_node_type_category(),
-                                                                         type=self.get_node_type())
+                                                                         category=self._get_node_type_category(),
+                                                                         type=self._get_node_type())
 
             if os.path.isfile(preset_path):
                 return preset_path
 
-    def remote_preset_path(self):
+    def _remote_preset_path(self):
         """
         The path on disk of the remote preset for the given node if it exists
 
         :return:        The path on disk to the preset
         :type:          str
         """
-        if self.is_valid():
+        if self._is_valid():
             prefs = os.getenv('PRESET_REPO')
             preset_path = '{prefs}/{category}/{type}.idx'.format(prefs=prefs,
-                                                                 category=self.get_node_type_category(),
-                                                                 type=self.get_node_type())
+                                                                 category=self._get_node_type_category(),
+                                                                 type=self._get_node_type())
 
             if os.path.isfile(preset_path):
                 return preset_path
 
-    def setup_tmp_dir(self):
+    def _setup_tmp_dir(self):
         """
         Generate a temp directory on disk that we can use to work in
         """
@@ -113,41 +113,41 @@ class PresetManager(object):
         """
         # Make sure we have a valid temp directory
         if not self.temp:
-            self.setup_tmp_dir()
+            self._setup_tmp_dir()
 
         # First lets extract the local presets
         local_dir = '{temp}/local'.format(temp=self.temp)
         os.makedirs(local_dir)
 
         # Now extract the presets into this directory (if any presets exist)
-        if self.local_preset_path():
-            cmd_list = ['hidx', '-x', local_dir, self.local_preset_path()]
+        if self._local_preset_path():
+            cmd_list = ['hidx', '-x', local_dir, self._local_preset_path()]
             subprocess.call(cmd_list)
             print 'Local presets for {category}/{type} ' \
-                  'extracted to {path}'.format(category=self.get_node_type_category(),
-                                               type=self.get_node_type(),
+                  'extracted to {path}'.format(category=self._get_node_type_category(),
+                                               type=self._get_node_type(),
                                                path=local_dir)
         else:
-            print 'No local presets for {category}/{type} found'.format(category=self.get_node_type_category(),
-                                                                        type=self.get_node_type())
+            print 'No local presets for {category}/{type} found'.format(category=self._get_node_type_category(),
+                                                                        type=self._get_node_type())
 
         # Now lets extract the remote presets
         remote_dir = '{temp}/remote'.format(temp=self.temp)
         os.makedirs(remote_dir)
 
         # Now extract the presets into this directory (if any presets exist)
-        if self.remote_preset_path():
-            cmd_list = ['hidx', '-x', remote_dir, self.remote_preset_path()]
+        if self._remote_preset_path():
+            cmd_list = ['hidx', '-x', remote_dir, self._remote_preset_path()]
             subprocess.call(cmd_list)
             print 'Remote preset for {category}/{type} ' \
-                  'extracted to {path}'.format(category=self.get_node_type_category(),
-                                               type=self.get_node_type(),
+                  'extracted to {path}'.format(category=self._get_node_type_category(),
+                                               type=self._get_node_type(),
                                                path=remote_dir)
         else:
-            print 'No remote presets for {category}/{type} found'.format(category=self.get_node_type_category(),
-                                                                         type=self.get_node_type())
+            print 'No remote presets for {category}/{type} found'.format(category=self._get_node_type_category(),
+                                                                         type=self._get_node_type())
 
-    def analyse_presets(self):
+    def _analyse_presets(self):
         """
         Analyse all the presets available for the given node and use them to populate the local and remote presets list
         """
@@ -164,6 +164,41 @@ class PresetManager(object):
         # Make sure we have just the presets, not the index
         if 'Sections.list' in self.remote_presets:
             self.remote_presets.remove('Sections.list')
+
+    def _regenerate_section_list(self):
+        """
+        Re-generate the Section.list for the given node
+        """
+        # First remove the old Section.list if one exists
+        section_list = '{temp}/remote/Sections.list'.format(temp=self.temp)
+        if os.path.exists(section_list):
+            os.remove(section_list)
+
+        # Now write the new one
+        section_file = open(section_list, 'w')
+        # First the header
+        section_file.write('""\n')
+        # Make sure our presets are up to date
+        self._analyse_presets()
+        # Loop through and write each remote preset
+        for preset in self.remote_presets:
+            section_file.write('{preset}\t{preset}\n'.format(preset=preset))
+        # Finish writing and close the file
+        section_file.close()
+
+    def _remote_exists(self, preset):
+        """
+        Check if a preset with the same name as the one provided is already published
+
+        :param preset:      The preset name to check
+        :type preset:       str
+        :return:            Does it exist?
+        :type:              bool
+        """
+        if preset in self.remote_presets:
+            return True
+        else:
+            return False
 
     def can_publish(self):
         """
@@ -182,8 +217,8 @@ class PresetManager(object):
         Publish the preset for the given node
         """
         msg = 'Please pick from the following local presets for {category}/{type} ' \
-              'that are available to publish.'.format(category=self.get_node_type_category(),
-                                                      type=self.get_node_type())
+              'that are available to publish.'.format(category=self._get_node_type_category(),
+                                                      type=self._get_node_type())
         result = hou.ui.selectFromList(self.local_presets,
                                        message=msg,
                                        title='Preset Publisher',
@@ -193,7 +228,7 @@ class PresetManager(object):
         if result:
             preset = self.local_presets[result[0]]
 
-            if self.remote_exists(preset):
+            if self._remote_exists(preset):
                 # Already exists
                 msg = 'A preset with this name has already been published for this node type. Either select a new ' \
                       'name or leave it unchanged to overwrite.'
@@ -214,16 +249,16 @@ class PresetManager(object):
             shutil.copy(local_path, remote_path)
 
             # Regenerate Section.list
-            self.regenerate_section_list()
+            self._regenerate_section_list()
 
             # Write into idx
             remote_dir = '{temp}/remote'.format(temp=self.temp)
 
             prefs = os.getenv('PRESET_REPO')
             preset_dir = '{prefs}/{category}'.format(prefs=prefs,
-                                                     category=self.get_node_type_category())
+                                                     category=self._get_node_type_category())
             preset_path = '{directory}/{type}.idx'.format(directory=preset_dir,
-                                                          type=self.get_node_type())
+                                                          type=self._get_node_type())
             # Create any missing directories
             if not os.path.isdir(preset_dir):
                 os.makedirs(preset_dir)
@@ -232,38 +267,3 @@ class PresetManager(object):
             cmd_list = ['hidx', '-c', remote_dir, preset_path]
             print cmd_list
             subprocess.call(cmd_list)
-
-    def regenerate_section_list(self):
-        """
-        Re-generate the Section.list for the given node
-        """
-        # First remove the old Section.list if one exists
-        section_list = '{temp}/remote/Sections.list'.format(temp=self.temp)
-        if os.path.exists(section_list):
-            os.remove(section_list)
-
-        # Now write the new one
-        section_file = open(section_list, 'w')
-        # First the header
-        section_file.write('""\n')
-        # Make sure our presets are up to date
-        self.analyse_presets()
-        # Loop through and write each remote preset
-        for preset in self.remote_presets:
-            section_file.write('{preset}\t{preset}\n'.format(preset=preset))
-        # Finish writing and close the file
-        section_file.close()
-
-    def remote_exists(self, preset):
-        """
-        Check if a preset with the same name as the one provided is already published
-
-        :param preset:      The preset name to check
-        :type preset:       str
-        :return:            Does it exist?
-        :type:              bool
-        """
-        if preset in self.remote_presets:
-            return True
-        else:
-            return False
