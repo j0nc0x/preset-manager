@@ -1,13 +1,18 @@
 # Houdini Preset Manager
 A simple python tool that can be used to publish Houdini node presets to a central location (currently a shared folder on disk).
 ## Usage
+First ensure that the preset manager is added to the Houdini script path, and that the PRESET_REPO is set to point at the central presets directory:
+```bash
+export HOUDINI_SCRIPT_PATH=@/scripts:/store/preset-manager
+export PRESET_REPO=/store/presets
+```
 From a Houdini python shell the following code can be run to trigger the preset manager for a specified node:
 ```python
 import presetmanager
 # select a node in the scene
 n = hou.node('/obj/geo1/sphere1')
 # initialise the preset manager with the node
-man = presetmanager.PresetManager(n)`
+man = presetmanager.PresetManager(n)
 # start the publish
 man.publish_preset()
 ```
